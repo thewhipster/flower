@@ -11,6 +11,7 @@ from tornado import websocket
 from tornado.ioloop import PeriodicCallback
 
 from ..views import BaseHandler
+from ..options import options
 from ..api.workers import ListWorkers
 
 
@@ -43,6 +44,11 @@ class DashboardView(BaseHandler):
             info.update(self._as_dict(worker))
             info.update(status=worker.alive)
             workers[name] = info
+        
+        if options.purge_offline_workers:
+            offline_workers = [name for name, info in workers.items() if info.get('worker-offline', 0)]
+            for name in offline_workers:
+                workers.pop(name)
 
         if json:
             self.write(dict(data=list(workers.values())))
